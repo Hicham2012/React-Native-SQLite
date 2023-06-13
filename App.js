@@ -19,6 +19,7 @@ import asyncAlert from './asyncAlert';
 
 const db = SQLite.openDatabase('little_lemon');
 
+// Implement edit and delete with SQLite
 export default function App() {
   const [textInputValue, setTextInputValue] = useState('');
   const [dialog, setDialog] = useState({
@@ -53,8 +54,22 @@ export default function App() {
       isVisible: false,
       customer: {},
     });
-    // 1. Set the new local customer state
-    // 2. Create a SQL transaction to edit a customer. Make sure if two names are the same, only the selected item is deleted
+    const newCustomers = customers.map((customer) => {
+      if (customer.uid !== updatedCustomer.uid) {
+        return customer;
+      }
+
+      return updatedCustomer;
+    });
+
+    setCustomers(newCustomers);
+    // Edit customer from DB
+    db.transaction((tx) => {
+      tx.executeSql(
+        `update customers set uid=?, name=? where uid=${updatedCustomer.uid}`,
+        [updatedCustomer.uid, updatedCustomer.name]
+      );
+    });
   };
 
   const deleteCustomer = async (customer) => {
@@ -65,8 +80,12 @@ export default function App() {
     if (!shouldDelete) {
       return;
     }
-    // 1. Set the new local customer state
-    // 2. Create a SQL transaction to delete a customer. Make sure if two names are the same, only the selected item is deleted
+    const newCustomers = customers.filter((c) => c.uid !== customer.uid);
+    setCustomers(newCustomers);
+    // SQL transaction to delete item based on uid
+    db.transaction((tx) => {
+      tx.executeSql('delete from customers where uid = ?', [customer.uid]);
+    });
   };
 
   return (

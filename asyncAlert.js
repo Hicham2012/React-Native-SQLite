@@ -5,6 +5,7 @@ export default function asyncAlert({
   message,
   cancelText = 'Cancel',
   okText = 'OK',
+  onPress
 })  {
   return new Promise(resolve => {
     Alert.alert(
@@ -21,6 +22,7 @@ export default function asyncAlert({
         {
           text: okText,
           onPress: () => {
+            onPress?.();
             resolve(true);
           }
         }
